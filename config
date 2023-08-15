@@ -1,0 +1,56 @@
+<VirtualHost *:80>
+    ServerName mydomain.com
+    ServerAlias www.mydomain.com
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/mydomain
+	
+	ProxyRequests Off
+    ProxyPreserveHost On
+    ProxyVia Full
+
+    <Proxy *>
+        Require all granted
+    </Proxy>
+
+	ProxyPass "/blog" !
+    ProxyPassReverse "/blog" !
+	ProxyPass "/api" http://127.0.0.1:81
+    ProxyPassReverse "/api" http://127.0.0.1:81
+    ProxyPass / http://127.0.0.1:3000/
+    ProxyPassReverse / http://127.0.0.1:3000/
+	
+	<Location /blog/>
+		<IfModule mod_rewrite.c>
+		RewriteEngine On
+		RewriteBase /blog/
+		RewriteRule ^index\.php$ - [L]
+		RewriteCond %{REQUEST_FILENAME} !-f
+		RewriteCond %{REQUEST_FILENAME} !-d
+		RewriteRule . /blog/index.php [L]
+		</IfModule>
+	</Location>
+	
+	
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+<VirtualHost *:81>
+    ServerName mydomain.com
+    ServerAlias www.mydomain.com
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/mydomain/api
+	
+	<IfModule dir_module>
+		DirectoryIndex index.php
+	</IfModule>
+	
+	<IfModule mod_rewrite.c> 
+		RewriteEngine On
+		RewriteCond %{REQUEST_FILENAME} !-f
+		RewriteRule ^([^\.]+)$ $1.php [NC,L]
+	</IfModule>
+
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+  CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
